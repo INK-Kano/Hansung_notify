@@ -8,7 +8,6 @@ import subprocess
 from multiprocessing import Pool
 import requests
 
-
 # 동영상
 # http://learn.hansung.ac.kr/report/ubcompletion/user_progress_a.php?id=
 # 과제
@@ -17,6 +16,8 @@ import requests
 # http://learn.hansung.ac.kr/mod/webexactivity/index.php?id=
 # 인증
 # http://learn.hansung.ac.kr/local/ruauth/
+# 모바일 출석 사이트
+# http://learn.hansung.ac.kr/report/ubcompletion/user_progress_mobile_a.php?id=
 
 def make_db():
     conn.execute(
