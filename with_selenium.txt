@@ -1,0 +1,143 @@
+import time
+import random
+from selenium import webdriver
+from bs4 import BeautifulSoup
+import sqlite3
+import os
+import subprocess
+from multiprocessing import Pool
+import requests
+
+
+def login_hs():
+    driver.get("https://learn.hansung.ac.kr/login.php")
+
+    input_js = ' \
+            document.getElementById("input-username").value = "{id}"; \
+            document.getElementById("input-password").value = "{pw}"; \
+        '.format(id="2071396", pw="dododo2001!")
+    driver.execute_script(input_js)
+    driver.find_element_by_name("loginbutton").click()
+
+
+# 동영상
+# driver.get("http://learn.hansung.ac.kr/report/ubcompletion/user_progress_a.php?id=" + class_link_num[i])
+# 과제
+# driver.get("http://learn.hansung.ac.kr/mod/assign/index.php?id=" + class_link_num[i])
+# 실강
+# driver.get("http://learn.hansung.ac.kr/mod/webexactivity/index.php?id=" + class_link_num[i])
+# 인증
+# http://learn.hansung.ac.kr/local/ruauth/
+
+
+def get_class():
+    cur.execute("SELECT * FROM user_data")
+    if len(cur.fetchall()) == 0:
+        mainpage = driver.page_source
+        mainpage_soup = BeautifulSoup(mainpage, 'lxml')
+        class_info = mainpage_soup.select('a.course_link')
+
+        for i in class_info:
+            temp = i.text
+
+            if temp.find("커뮤니티") == -1:
+                class_name.append(temp[10:temp.find("[")])
+                division.append(temp[temp.find("[") + 1])
+                professor.append(temp[temp.find("]") + 1:])
+                class_link.append(i["href"])
+                class_link_num.append(i["href"][-4:])
+
+        for i in range(0, len(class_name)):
+            professor[i] = professor[i].replace("NEW", "")
+
+        print(class_name)
+        print(division)
+        print(professor)
+        print(class_link)
+        print(class_link_num)
+
+        for i in range(0, len(class_name)):
+            cur.execute("INSERT INTO user_data VALUES (?, ?, ?, ?, ?)",
+                        (class_name[i], division[i], professor[i], class_link[i], class_link_num[i]))
+            class_name[i] = class_name[i].replace(" ", "_")
+
+        for i in range(0, len(class_name)):
+            cur.execute(
+                "CREATE TABLE IF NOT EXISTS %s(lecture text, homework text, real_time_lecture text, notice text, quiz text)" % (
+                    class_name[i]))
+
+
+def get_class_name_and_num():
+    cur.execute("SELECT count(class_name) from user_data")
+    class_count = cur.fetchall()
+    class_count = class_count[0][0]
+
+    cur.execute("SELECT class_name, class_link_num FROM user_data")
+    lt = cur.fetchall()
+
+    for i in range(0, class_count):
+        class_link_num.append(lt[i][1])
+        class_name.append(lt[i][0])
+
+
+def get_homework():
+    print(class_link_num)
+
+    for i in range(0, len(class_link_num)):
+        f.write(class_name[i] + '\n\n')
+
+        driver.get("http://learn.hansung.ac.kr/mod/assign/index.php?id=" + class_link_num[i])
+        b = driver.page_source
+        b_soup = BeautifulSoup(b, 'lxml')
+        b_infos = b_soup.select('td.cell')
+
+        for b_info in b_infos:
+            f.write(b_info.text + '\n')
+
+
+if __name__ == "__main__":
+    start = time.time()
+
+    # set chrome
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    options.add_argument('lang=ko_KR')
+    options.add_argument('window-size=1920x1080')
+    options.add_argument("disable-gpu")
+
+    executable_path = "./chromedriver_win32/chromedriver.exe"
+    driver = webdriver.Chrome(executable_path=executable_path, chrome_options=options)
+
+    # connect db
+    conn = sqlite3.connect("user.db")
+    cur = conn.cursor()
+    cur2 = conn.cursor()
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS user_data(class_name text, division text, professor text, class_link text, class_link_num text)")
+
+    # txt file open
+    f = open("./temp.txt", 'w')
+
+    login_hs()
+
+    # test
+    class_name = []
+    professor = []
+    division = []
+    class_link = []
+    class_link_num = []
+
+    get_class()
+    get_class_name_and_num()
+
+    get_homework()
+
+    subprocess.call("TASKKILL /f /t /IM  CHROMEDRIVER.EXE")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    f.close()
+
+    print(time.time() - start)
