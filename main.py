@@ -159,6 +159,17 @@ def get_quiz():
             cur.execute("INSERT INTO quiz VALUES (?, ?, ?, ?, ?)",
                         (class_name[i], title[j].text, due_date[j].text, grade[j].text, "http://learn.hansung.ac.kr/mod/quiz/" + link[j]['href']))
 
+def get_attendance():
+    for i in range(0, class_count):
+        attendance_html = session.get("http://learn.hansung.ac.kr/report/ubcompletion/user_progress_mobile_a.php?id=" + class_link_num[i])
+        attendance_soup = BeautifulSoup(attendance_html.text, 'lxml')
+
+        attendance = attendance_soup.select('div.well > table.user_progress > tbody')
+
+        for j in range(0, len(attendance)):
+            print(attendance[j].text)
+            print("=============================================================================================")
+
 
 if __name__ == "__main__":
     start = time.time()
@@ -199,10 +210,11 @@ if __name__ == "__main__":
 
     get_var_in_db()
 
-    get_homework()
-    get_file()
-    get_quiz()
-    get_notice()
+    # get_homework()
+    # get_file()
+    # get_quiz()
+    # get_notice()
+    get_attendance()
 
     conn.commit()
     cur.close()
