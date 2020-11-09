@@ -1,7 +1,7 @@
 import time
 import random
 from selenium import webdriver
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs4
 import sqlite3
 import os
 import subprocess
@@ -43,7 +43,7 @@ def get_class():
     if len(cur.fetchall()) == 0:
         mainpage = session.get("https://learn.hansung.ac.kr/")
 
-        mainpage_soup = BeautifulSoup(mainpage.text, 'lxml')
+        mainpage_soup = bs4(mainpage.text, 'lxml')
         class_infos = mainpage_soup.select('a.course_link')
 
         for i in class_infos:
@@ -61,7 +61,7 @@ def get_class():
 
         for i in range(0, len(class_name)):
             notice_temp = session.get("http://learn.hansung.ac.kr/course/view.php?id=" + class_link_num[i])
-            notice_temp_soup = BeautifulSoup(notice_temp.text, 'lxml')
+            notice_temp_soup = bs4(notice_temp.text, 'lxml')
 
             notice_num = notice_temp_soup.select('div.activityinstance > a')
             notice_link.append(notice_num[0]["href"][-6:])
@@ -91,7 +91,7 @@ def get_var_in_db():
 def get_homework():
     for i in range(0, class_count):
         homework_html = session.get("http://learn.hansung.ac.kr/mod/assign/index.php?id=" + class_link_num[i])
-        homework_soup = BeautifulSoup(homework_html.text, 'lxml')
+        homework_soup = bs4(homework_html.text, 'lxml')
 
         title = homework_soup.select('td.c1')
         due_date = homework_soup.select('td.c2')
@@ -107,7 +107,7 @@ def get_homework():
 def get_file():
     for i in range(0, class_count):
         file_html = session.get("http://learn.hansung.ac.kr/mod/ubfile/index.php?id=" + class_link_num[i])
-        file_soup = BeautifulSoup(file_html.text, 'lxml')
+        file_soup = bs4(file_html.text, 'lxml')
 
         title = file_soup.select('td.c1')
         description = file_soup.select('td.c2')
@@ -121,7 +121,7 @@ def get_file():
 def get_notice():
     for i in range(0, class_count):
         notice_html = session.get("http://learn.hansung.ac.kr/mod/ubboard/view.php?id=" + notice_link[i])
-        notice_soup = BeautifulSoup(notice_html.text, 'lxml')
+        notice_soup = bs4(notice_html.text, 'lxml')
 
         notice_temp = notice_soup.select('td')
         link = notice_soup.select('td > a')
@@ -148,7 +148,7 @@ def get_notice():
 def get_quiz():
     for i in range(0, class_count):
         quiz_html = session.get("http://learn.hansung.ac.kr/mod/quiz/index.php?id=" + class_link_num[i])
-        quiz_soup = BeautifulSoup(quiz_html.text, 'lxml')
+        quiz_soup = bs4(quiz_html.text, 'lxml')
 
         title = quiz_soup.select('td.c1')
         due_date = quiz_soup.select('td.c2')
@@ -162,7 +162,7 @@ def get_quiz():
 def get_attendance():
     for i in range(0, class_count):
         attendance_html = session.get("http://learn.hansung.ac.kr/report/ubcompletion/user_progress_mobile_a.php?id=" + class_link_num[i])
-        attendance_soup = BeautifulSoup(attendance_html.text, 'lxml')
+        attendance_soup = bs4(attendance_html.text, 'lxml', parse_only=bs.SoupStrainer("div.well > table.user_progress > tbody"))
 
         attendance = attendance_soup.select('div.well > table.user_progress > tbody')
 
@@ -210,10 +210,10 @@ if __name__ == "__main__":
 
     get_var_in_db()
 
-    # get_homework()
-    # get_file()
-    # get_quiz()
-    # get_notice()
+    get_homework()
+    get_file()
+    get_quiz()
+    get_notice()
     get_attendance()
 
     conn.commit()
