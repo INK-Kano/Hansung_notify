@@ -126,26 +126,20 @@ def get_notice():
         notice = []
         created_date = []
 
-        print(class_name[i])
-        
         for j in range(0, len(notice_temp)):
             notice_temp[j] = notice_temp[j].text.replace("\t", "")
             notice_temp[j] = notice_temp[j].replace("\n", "")
-
-            print(notice_temp[j])
-            print("+++++++++++++++++++++++++++++++++++++++++++++++" + str(j) + "+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        print("==========================================================================================================")
-
-        j = 0
-        while len(notice_temp) > j:
-            if notice_temp[j] != "등록된 게시글이 없습니다.":
+        
+        if notice_temp[0] != "등록된 게시글이 없습니다.":
+            j = 1
+            while len(notice_temp) > j:
                 notice.append(notice_temp[j])
+                j += 2
                 created_date.append(notice_temp[j])
+                j += 3
 
-            j += 1
-
-        for j in range(0, len(notice)):
-            f.write(notice[j] + " " + created_date[j] + "\n")
+            for j in range(0, len(notice)):
+                cur.execute("INSERT INTO notice VALUES (?, ?, ?)", (class_name[i], notice[j], created_date[j]))
 
 
 def get_quiz():
@@ -201,17 +195,13 @@ if __name__ == "__main__":
 
     get_var_in_db()
 
-    f = open("./temp.txt", 'w')
-
-    # get_homework()
-    # get_file()
-    # get_quiz()
+    get_homework()
+    get_file()
+    get_quiz()
     get_notice()
 
     conn.commit()
     cur.close()
     conn.close()
-
-    f.close()
 
     print(time.time() - start)
