@@ -24,16 +24,16 @@ def make_db():
     )
 
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS homework(class_name text, title text, due_date text, status text, grade text)"
+        "CREATE TABLE IF NOT EXISTS homework(class_name text, title text, due_date text, status text, grade text, link text)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS file(class_name text, title text, description text)"
+        "CREATE TABLE IF NOT EXISTS file(class_name text, title text, description text, link text)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS notice(class_name text, title text, creation_date text)"
+        "CREATE TABLE IF NOT EXISTS notice(class_name text, title text, creation_date text, link text)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS quiz(class_name text, title text, due_date text, grade text)"
+        "CREATE TABLE IF NOT EXISTS quiz(class_name text, title text, due_date text, grade text, link text)"
     )
 
 
@@ -97,10 +97,11 @@ def get_homework():
         due_date = homework_soup.select('td.c2')
         status = homework_soup.select('td.c3')
         grade = homework_soup.select('td.c4')
+        link = homework_soup.select('td > a')
 
         for j in range(0, len(title)):
-            cur.execute("INSERT INTO homework VALUES (?, ?, ?, ?, ?)",
-                        (class_name[i], title[j].text, due_date[j].text, status[j].text, grade[j].text))
+            cur.execute("INSERT INTO homework VALUES (?, ?, ?, ?, ?, ?)",
+                        (class_name[i], title[j].text, due_date[j].text, status[j].text, grade[j].text, link[j]['href']))
 
 
 def get_file():
@@ -110,10 +111,11 @@ def get_file():
 
         title = file_soup.select('td.c1')
         description = file_soup.select('td.c2')
+        link = file_soup.select('td > a')
 
         for j in range(0, len(title)):
-            cur.execute("INSERT INTO file VALUES (?, ?, ?)",
-                        (class_name[i], title[j].text, description[j].text))
+            cur.execute("INSERT INTO file VALUES (?, ?, ?, ?)",
+                        (class_name[i], title[j].text, description[j].text, "http://learn.hansung.ac.kr/mod/ubfile/" + link[j]['href']))
 
 
 def get_notice():
@@ -121,7 +123,8 @@ def get_notice():
         notice_html = session.get("http://learn.hansung.ac.kr/mod/ubboard/view.php?id=" + notice_link[i])
         notice_soup = BeautifulSoup(notice_html.text, 'lxml')
 
-        notice_temp = notice_soup('td')
+        notice_temp = notice_soup.select('td')
+        link = notice_soup.select('td > a')
 
         notice = []
         created_date = []
@@ -139,7 +142,7 @@ def get_notice():
                 j += 3
 
             for j in range(0, len(notice)):
-                cur.execute("INSERT INTO notice VALUES (?, ?, ?)", (class_name[i], notice[j], created_date[j]))
+                cur.execute("INSERT INTO notice VALUES (?, ?, ?, ?)", (class_name[i], notice[j], created_date[j], link[j]['href']))
 
 
 def get_quiz():
@@ -150,10 +153,11 @@ def get_quiz():
         title = quiz_soup.select('td.c1')
         due_date = quiz_soup.select('td.c2')
         grade = quiz_soup.select('td.c3')
+        link = quiz_soup.select('td > a')
 
         for j in range(0, len(title)):
-            cur.execute("INSERT INTO quiz VALUES (?, ?, ?, ?)",
-                        (class_name[i], title[j].text, due_date[j].text, grade[j].text))
+            cur.execute("INSERT INTO quiz VALUES (?, ?, ?, ?, ?)",
+                        (class_name[i], title[j].text, due_date[j].text, grade[j].text, "http://learn.hansung.ac.kr/mod/quiz/" + link[j]['href']))
 
 
 if __name__ == "__main__":
