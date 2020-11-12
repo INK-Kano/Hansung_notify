@@ -163,17 +163,21 @@ def get_quiz():
 def get_attendance():
     for i in range(0, class_count):
         attendance_html = session.get("http://learn.hansung.ac.kr/report/ubcompletion/user_progress_mobile_a.php?id=" + class_link_num[i])
-        attendance_soup = bs4(attendance_html.text, 'lxml', parse_only=bs.SoupStrainer("div.well > table.user_progress > tbody"))
+        attendance_soup = bs4(attendance_html.text, 'lxml')
 
-        attendance = attendance_soup.select('div.well > table.user_progress > tbody')
+        attendance = attendance_soup.select('div.well > table.user_progress > tbody > tr')
 
+        f.write(class_name[i] + "\n\n")
         for j in range(0, len(attendance)):
-            print(attendance[j].text)
-            print("=============================================================================================")
+            f.write(attendance[j].text)
+            f.write("\n")
+            f.write("=============================================================================================\n")
 
 
 if __name__ == "__main__":
     start = time.time()
+
+    f = open("./temp.txt", 'w', -1, 'utf-8')
 
     # connect db
     conn = sqlite3.connect("user.db")
@@ -211,11 +215,14 @@ if __name__ == "__main__":
 
     get_var_in_db()
 
-    get_homework()
-    get_file()
-    get_quiz()
-    get_notice()
+    # get_homework()
+    # get_file()
+    # get_quiz()
+    # get_notice()
     get_attendance()
+
+
+    f.close()
 
     conn.commit()
     cur.close()
