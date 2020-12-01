@@ -162,10 +162,11 @@ def get_quiz():
 
 def get_attendance():
     for i in range(0, class_count):
-        attendance_html = session.get("http://learn.hansung.ac.kr/report/ubcompletion/user_progress_mobile_a.php?id=" + class_link_num[i])
+        attendance_html = session.get("http://learn.hansung.ac.kr/report/ubcompletion/user_progress_a.php?id=" + class_link_num[i])
         attendance_soup = bs4(attendance_html.text, 'lxml')
 
-        attendance = attendance_soup.select('div.well > table.user_progress > tbody > tr')
+        attendance = attendance_soup.select('div.well > table.user_progress_table > tbody > tr > td')
+        rowspan = attendance_soup.select('div.well > table.user_progress_table > tbody > tr > td[rowspan]')
 
         f.write(class_name[i] + "\n\n")
         for j in range(0, len(attendance)):
@@ -173,12 +174,14 @@ def get_attendance():
             f.write("\n")
             f.write("=============================================================================================\n")
 
+        for j in range(0, len(rowspan), 2):
+            print(rowspan[j]["rowspan"])
+        print('\n')
 
 if __name__ == "__main__":
-    start = time.time()
-
     f = open("./temp.txt", 'w', -1, 'utf-8')
 
+    start = time.time()
     # connect db
     conn = sqlite3.connect("user.db")
     cur = conn.cursor()
@@ -215,12 +218,11 @@ if __name__ == "__main__":
 
     get_var_in_db()
 
-    # get_homework()
-    # get_file()
-    # get_quiz()
-    # get_notice()
-    get_attendance()
-
+    get_homework()
+    get_file()
+    get_quiz()
+    get_notice()
+    # get_attendance()
 
     f.close()
 
